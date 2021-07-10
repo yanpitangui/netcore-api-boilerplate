@@ -1,23 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using Boilerplate.Application.DTOs;
 using Boilerplate.Application.DTOs.Hero;
 using Boilerplate.Application.Filters;
 using Boilerplate.Application.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Boilerplate.Api.Controllers
 {
-
     [ApiController]
     [Route("api/[controller]")]
     public class HeroController : ControllerBase
     {
-        private readonly IHeroAppService _heroAppService;
+        private readonly IHeroService _heroService;
 
-        public HeroController(IHeroAppService heroAppService)
+        public HeroController(IHeroService heroService)
         {
-            _heroAppService = heroAppService;
+            _heroService = heroService;
         }
 
 
@@ -27,9 +27,9 @@ namespace Boilerplate.Api.Controllers
         /// <param name="filter"></param>
         /// <returns></returns>
         [HttpGet]
-        public async Task<ActionResult<List<GetHeroDto>>> GetHeroes([FromQuery] GetHeroesFilter filter)
+        public async Task<ActionResult<PaginatedList<GetHeroDto>>> GetHeroes([FromQuery] GetHeroesFilter filter)
         {
-            return Ok(await _heroAppService.GetAllHeroes(filter));
+            return Ok(await _heroService.GetAllHeroes(filter));
         }
 
 
@@ -40,11 +40,11 @@ namespace Boilerplate.Api.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("{id}")]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(typeof(GetHeroDto), 200)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(GetHeroDto), StatusCodes.Status200OK)]
         public async Task<ActionResult<GetHeroDto>> GetHeroById(Guid id)
         {
-            var hero = await _heroAppService.GetHeroById(id);
+            var hero = await _heroService.GetHeroById(id);
             if (hero == null) return NotFound();
             return Ok(hero);
         }
@@ -55,9 +55,9 @@ namespace Boilerplate.Api.Controllers
         /// <param name="dto">The hero information</param>
         /// <returns></returns>
         [HttpPost]
-        public async Task<ActionResult<GetHeroDto>> Create([FromBody] InsertHeroDto dto)
+        public async Task<ActionResult<GetHeroDto>> Create([FromBody] CreateHeroDto dto)
         {
-            var newHero = await _heroAppService.CreateHero(dto);
+            var newHero = await _heroService.CreateHero(dto);
             return CreatedAtAction(nameof(GetHeroById), new { id = newHero.Id }, newHero);
 
         }
@@ -72,7 +72,7 @@ namespace Boilerplate.Api.Controllers
         public async Task<ActionResult<GetHeroDto>> Update(Guid id, [FromBody] UpdateHeroDto dto)
         {
 
-            var updatedHero = await _heroAppService.UpdateHero(id, dto);
+            var updatedHero = await _heroService.UpdateHero(id, dto);
 
             if (updatedHero == null) return NotFound();
 
@@ -86,16 +86,14 @@ namespace Boilerplate.Api.Controllers
         /// <param name="id">The hero's ID</param>
         /// <returns></returns>
         [HttpDelete]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Route("{id}")]
         public async Task<ActionResult> Delete(Guid id)
         {
-
-            var deleted = await _heroAppService.DeleteHero(id);
+            var deleted = await _heroService.DeleteHero(id);
             if (deleted) return NoContent();
             return NotFound();
-
         }
     }
 }

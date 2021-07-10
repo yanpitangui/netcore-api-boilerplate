@@ -1,26 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Boilerplate.Domain.Entities;
 using Boilerplate.Domain.Entities.Enums;
 using Boilerplate.Infrastructure.Context;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using BC = BCrypt.Net.BCrypt;
 
 namespace Boilerplate.Api.IntegrationTests.Helpers
 {
     public static class Utilities
     {
-        public static void InitializeDbForTests(HeroDbContext db)
+        public static void InitializeDbForTests(ApplicationDbContext db)
         {
+            db.Users.RemoveRange(db.Users);
+            db.Heroes.RemoveRange(db.Heroes);
             db.Heroes.AddRange(GetSeedingHeroes());
+            db.Users.AddRange(GetSeedingUsers());
             db.SaveChanges();
         }
 
-        public static void ReinitializeDbForTests(HeroDbContext db)
+        public static User[] GetSeedingUsers()
         {
-            db.Heroes.RemoveRange(db.Heroes);
+            return new User[]
+            {
+                new User()
+                {
+                    Id = new Guid("2e3b7a21-f06e-4c47-b28a-89bdaa3d2a37"),
+                    Password = BC.HashPassword("testpassword123"),
+                    Email = "admin@boilerplate.com",
+                    Role = "Admin"
+                },
+                new User()
+                {
+                    Id = new Guid("c68acd7b-9054-4dc3-b536-17a1b81fa7a3"),
+                    Password = BC.HashPassword("testpassword123"),
+                    Email = "user@boilerplate.com",
+                    Role = "User"
+                }
+            };
+        }
+
+        public static void ReinitializeDbForTests(ApplicationDbContext db)
+        {
+            db.Heroes.RemoveRange(db.Heroes.ToList());
+            db.Users.RemoveRange(db.Users.ToList());
             InitializeDbForTests(db);
         }
 
@@ -36,32 +64,29 @@ namespace Boilerplate.Api.IntegrationTests.Helpers
 
         public static WebApplicationFactory<Startup> BuildApplicationFactory(this WebApplicationFactory<Startup> factory)
         {
+            var connectionString = $"Data Source={Guid.NewGuid()}.db";
             return factory.WithWebHostBuilder(builder =>
             {
-                builder.UseEnvironment("Testing");
                 builder.ConfigureServices(services =>
                 {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType ==
+                    typeof(DbContextOptions<ApplicationDbContext>));
+
+                    services.Remove(descriptor);
+
+                    services.AddDbContext<ApplicationDbContext>(options =>
+                    {
+                        options.UseSqlite(connectionString);
+                    });
+
                     var sp = services.BuildServiceProvider();
 
-                    using (var scope = sp.CreateScope())
-                    {
-                        var scopedServices = scope.ServiceProvider;
-                        var db = scopedServices.GetRequiredService<HeroDbContext>();
-                        var logger = scopedServices
-                            .GetRequiredService<ILogger<WebApplicationFactory<Startup>>>();
-
-                        db.Database.EnsureCreated();
-
-                        try
-                        {
-                            InitializeDbForTests(db);
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex, "An error occurred seeding the " +
-                                                "database with test messages. Error: {Message}", ex.Message);
-                        }
-                    }
+                    using var scope = sp.CreateScope();
+                    var scopedServices = scope.ServiceProvider;
+                    var context = scopedServices.GetRequiredService<ApplicationDbContext>();
+                    context.Database.EnsureCreated();
+                    InitializeDbForTests(context);
                 });
             });
         }
@@ -74,25 +99,11 @@ namespace Boilerplate.Api.IntegrationTests.Helpers
                 builder.ConfigureServices(services =>
                 {
                     var serviceProvider = services.BuildServiceProvider();
-
-                    using (var scope = serviceProvider.CreateScope())
-                    {
-                        var scopedServices = scope.ServiceProvider;
-                        var db = scopedServices
-                            .GetRequiredService<HeroDbContext>();
-                        var logger = scopedServices
-                            .GetRequiredService<ILogger<IntegrationTest>>();
-                        try
-                        {
-                            ReinitializeDbForTests(db);
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex, "An error occurred seeding " +
-                                                "the database with test messages. Error: {Message}",
-                                ex.Message);
-                        }
-                    }
+                    using var scope = serviceProvider.CreateScope();
+                    var scopedServices = scope.ServiceProvider;
+                    var db = scopedServices
+                        .GetRequiredService<ApplicationDbContext>();
+                    ReinitializeDbForTests(db);
                 });
             });
         }

@@ -13,13 +13,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Boilerplate.Application.Services
 {
-    public class HeroAppService : IHeroAppService
+    public class HeroService : IHeroService
     {
         private readonly IHeroRepository _heroRepository;
 
         private readonly IMapper _mapper;
 
-        public HeroAppService(IMapper mapper, IHeroRepository heroRepository)
+        public HeroService(IMapper mapper, IHeroRepository heroRepository)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _heroRepository = heroRepository ?? throw new ArgumentNullException(nameof(heroRepository));
@@ -57,7 +57,7 @@ namespace Boilerplate.Application.Services
             return _mapper.Map<GetHeroDto>(await _heroRepository.GetById(id));
         }
 
-        public async Task<GetHeroDto> CreateHero(InsertHeroDto hero)
+        public async Task<GetHeroDto> CreateHero(CreateHeroDto hero)
         {
             var created = _heroRepository.Create(_mapper.Map<Hero>(hero));
             await _heroRepository.SaveChangesAsync();

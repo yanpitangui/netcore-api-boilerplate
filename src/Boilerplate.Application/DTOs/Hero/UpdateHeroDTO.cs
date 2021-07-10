@@ -1,5 +1,5 @@
 ﻿namespace Boilerplate.Application.DTOs.Hero
 {
-    public class UpdateHeroDto : InsertHeroDto
+    public class UpdateHeroDto : CreateHeroDto
     {}
 }

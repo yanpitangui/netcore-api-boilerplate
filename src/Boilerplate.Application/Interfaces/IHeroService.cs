@@ -7,7 +7,7 @@ using Boilerplate.Application.Filters;
 
 namespace Boilerplate.Application.Interfaces
 {
-    public interface IHeroAppService : IDisposable
+    public interface IHeroService : IDisposable
     {
         #region Hero Methods
 
@@ -15,7 +15,7 @@ namespace Boilerplate.Application.Interfaces
 
         public Task<GetHeroDto> GetHeroById(Guid id);
 
-        public Task<GetHeroDto> CreateHero(InsertHeroDto hero);
+        public Task<GetHeroDto> CreateHero(CreateHeroDto hero);
 
         public Task<GetHeroDto> UpdateHero(Guid id, UpdateHeroDto updatedHero);
 

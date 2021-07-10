@@ -44,5 +44,5 @@ jobs:
         run: |
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"yanpitangui_dotnet-api-boilerplate" /o:"yanpitangui" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="./tests/coverage.opencover.xml"
           dotnet build WebApiBoilerplate.sln --configuration Release
-          dotnet test WebApiBoilerplate.sln --% /p:CollectCoverage=true /p:CoverletOutput="../" /p:MergeWith="../coverage.json" /p:CoverletOutputFormat=\"opencover,json\" -m:1 --logger:trx --results-directory ./
+          dotnet test WebApiBoilerplate.sln --% /p:CollectCoverage=true /p:CoverletOutput="../" /p:MergeWith="../coverage.json" /p:CoverletOutputFormat=\"opencover,json\" --logger:trx --results-directory ./
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"

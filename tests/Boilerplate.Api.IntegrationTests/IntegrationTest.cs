@@ -1,16 +1,16 @@
 using Boilerplate.Api.IntegrationTests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
 
 namespace Boilerplate.Api.IntegrationTests
 {
-    public class IntegrationTest
+    public abstract class IntegrationTest: IClassFixture<WebApplicationFactoryFixture>
     {
-        protected IntegrationTest()
+        protected readonly WebApplicationFactory<Startup> Factory;
+
+        protected IntegrationTest(WebApplicationFactoryFixture fixture)
         {
-
+            Factory = fixture.Factory;
         }
-
-        protected static readonly WebApplicationFactory<Startup> Factory = new WebApplicationFactory<Startup>().BuildApplicationFactory();
-
     }
 }

@@ -14,12 +14,12 @@ namespace Boilerplate.Api.UnitTests
 {
     public class HeroRepositoryTests
     {
-        private HeroDbContext CreateDbContext(string name)
+        private ApplicationDbContext CreateDbContext(string name)
         {
-            var options = new DbContextOptionsBuilder<HeroDbContext>()
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(name)
             .Options;
-            return new HeroDbContext(options);
+            return new ApplicationDbContext(options);
         }
 
         [Theory]
